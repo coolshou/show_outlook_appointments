@@ -1,0 +1,31 @@
+{
+    "manifest_version": 2,
+    "name": "Show Outlook Appointments",
+    "description": "Show Outlook Appointments of ics",
+    "version": "0.2.5",
+    "author": "coolshou",
+    "applications": {
+        "gecko": {
+            "id": "soa@coolshou.idv.tw",
+            "strict_min_version": "75.0"
+        }
+    },
+    "icons": {
+        "64": "images/icon-64px.png",
+        "32": "images/icon-32px.png",
+        "16": "images/icon-16px.png"
+    },
+    "background": {
+        "scripts": [
+            "background.js"
+        ]
+    },
+    "options_ui": {
+      "page": "options/options.html",
+      "open_in_tab": false,
+      "browser_style": true
+    },
+    "permissions": [
+      "storage"
+    ]
+}
