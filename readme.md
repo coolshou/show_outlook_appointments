@@ -10,6 +10,8 @@
 
 ## TODO:
 
-1. ​	innerHTML: content parser or use innerText to avoid security issue.
+1. innerHTML: content parser or use innerText to avoid security issue.
+
+2. reply  appointment mail should include the embedded html (with options to switch on/off)
 
    
