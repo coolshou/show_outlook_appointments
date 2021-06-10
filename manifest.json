@@ -1,15 +1,15 @@
 {
     "manifest_version": 2,
-    "name": "Show Outlook Appointments",
-    "description": "Show Outlook Appointments of ics",
-    "version": "0.2.5",
-    "author": "coolshou",
+    "name": "show outlook ics",
+    "description": "An extension to show outlook ics attachement",
     "applications": {
         "gecko": {
-            "id": "soa@coolshou.idv.tw",
-            "strict_min_version": "75.0"
+            "id": "soi@coolshou.idv.tw",
+            "strict_min_version": "78.0"
         }
     },
+    "author": "coolshou",
+    "version": "0.0.1",
     "icons": {
         "64": "images/icon-64px.png",
         "32": "images/icon-32px.png",
@@ -17,15 +17,11 @@
     },
     "background": {
         "scripts": [
-            "background.js"
+            "src/background.js"
         ]
     },
-    "options_ui": {
-      "page": "options/options.html",
-      "open_in_tab": false,
-      "browser_style": true
-    },
     "permissions": [
-      "storage"
+        "messagesModify",
+        "messagesRead"
     ]
 }
