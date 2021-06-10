@@ -1,11 +1,11 @@
 const showNotification = async () => {
-  console.log("showNotification");
+  // console.log("showNotification");
   try {
     let icsdetail = await browser.runtime.sendMessage({
       command: "getIcsdetail",
     });
     const { text } = icsdetail;
-    console.log(`text: ${text}`);
+    // console.log(`text: ${text}`);
 
     const icsdisp = document.createElement("div");
     icsdisp.className = "icsDisplay";
