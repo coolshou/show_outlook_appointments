@@ -38,22 +38,15 @@ const doHandleCommand = async (message, sender) => {
                   console.log(elm.contentType);
                   if (elm.contentType == "text/html") {
                     // console.log(elm);
-                    //let fragment = document.createRange().createContextualFragment(elm);
-                    //fragment.
-                    // let hbody = elm.getAttribute('body')
-                    //console.log(fragment);
-                    msg= elm.body;
-                    // TODO: parser html doc's body
-                    /*
-                    sMsg = elm.body;
-                    let doc = new DOMParser();
-                    let html = doc.parseFromString(sMsg, 'text/xml');
-                    console.log(html);
-                    // const doc = document.createRange().createContextualFragment(sHtml)
-                    // var doc = new DOMParser().parseFromString(sMsg, 'text/xml');
-                    //msg = html.body.innerHTML;
-                    //console.log(msg);
-                    */
+                    // msg= elm.body;
+                    //
+                    //parser html doc's body
+                    var parser = new DOMParser();
+			              var doc = parser.parseFromString(elm.body, "text/html");
+			              var bodys = doc.getElementsByTagName('body');
+                    // console.log(bodys);
+                    //console.log(bodys[0].innerHTML);
+                    msg = bodys[0].innerHTML;
                   }
                   if (elm.contentType == "text/calendar") {
                     bCalendar= 1;
@@ -84,7 +77,7 @@ const doHandleCommand = async (message, sender) => {
  */
 const handleMessage = (message, sender, sendResponse) => {
   //console.log(message);
-  console.log(sender);
+  //console.log(sender);
   if (message && message.hasOwnProperty("command")) {
     // if we have a command, return a promise from the command handler
     return doHandleCommand(message, sender);
