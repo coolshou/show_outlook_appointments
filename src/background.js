@@ -103,10 +103,12 @@ const doHandleCommand = async (message, sender) => {
               }
             });
           }
-          if (msg != ""){
-            return {
-              text: msg,
-            };
+          if (msg){
+            if (msg != ""){
+              return {
+                text: msg,
+              };
+            }
           }
         } catch (e){
           console.log(e);
