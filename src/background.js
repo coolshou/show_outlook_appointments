@@ -32,17 +32,17 @@ const doHandleCommand = async (message, sender) => {
   // console.log(accounts);
   //get mail number
   //mailbox:///mnt/SOFT/sdb1/thunderbird/seuyj53m.default/Mail/localhost/Inbox?number=572231948
-  var url = sender.url
-  // console.log(url);
-  var res = url.split("?");
-  // console.log(res);
-  var nums = res[1].split("=");
-  if (nums.length==2){
-    var num = nums[1]
-    // console.log(num);
-    var tmpfolder = "/tmp/"+num;
-    console.log(tmpfolder);
-  }
+  // var url = sender.url
+  // // console.log(url);
+  // var res = url.split("?");
+  // // console.log(res);
+  // var nums = res[1].split("=");
+  // if (nums.length==2){
+  //   var num = nums[1]
+  //   // console.log(num);
+  //   var tmpfolder = "/tmp/"+num;
+  //   console.log(tmpfolder);
+  // }
 
   const messageHeader = await browser.messageDisplay.getDisplayedMessage(tabId);
 
@@ -56,35 +56,7 @@ const doHandleCommand = async (message, sender) => {
           let fullmessagepart = await browser.messages.getFull(messageHeader.id);
           // console.log(fullmessagepart);
           let fullmessageRaw = await browser.messages.getRaw(messageHeader.id);
-          // console.log(fullmessageRaw);
-          var sRelated = "Content-Type: multipart/related;"
-          var idx = fullmessageRaw.indexOf(sRelated);
-          if (idx >0){
-            //parser boundary
-            var sboundarys = fullmessageRaw.substr(idx+sRelated.length, fullmessageRaw.length); 
-            // console.log(sboundarys);
-            //find first "boundary=" & ;
-            var iBdx = sboundarys.indexOf(";");
-            var tmp = sboundarys.substr(0,iBdx);
-            var tmps = tmp.split("boundary=");
-            if (tmps.length==2){
-              tmp = tmps[1];
-              var sBoundary = tmp.replace(/\"/g,"");
-              // console.log(tmp);
-              var rawparts = sboundarys.split(sBoundary);
-              rawparts.forEach(rawpart =>{
-                if (rawpart.includes("Content-Type: image")){
-                  var img = {};
-                  handleImage(rawpart, img);
-                  // console.log(img);
-                  if (img.id.length>0){
-                    imglist[img.id] = img;
-                  }
-                }
-              });
-              console.log(imglist)
-            }
-          }
+          handleRaw(fullmessageRaw, imglist);
 
           if (fullmessagepart.parts.length>=1){
             fullmessagepart.parts.forEach(element => {
@@ -118,9 +90,49 @@ const doHandleCommand = async (message, sender) => {
   }
 };
 
+const handleRaw = (fullmessageRaw, imglist) => {
+  // console.log(fullmessageRaw);
+  var sRelated = "Content-Type: multipart/related;"
+  var idx = fullmessageRaw.indexOf(sRelated);
+  if (idx >0){
+    //parser boundary
+    var sboundarys = fullmessageRaw.substr(idx+sRelated.length, fullmessageRaw.length); 
+    // console.log(sboundarys);
+    //find first "boundary=" & ;
+    var iBdx = sboundarys.indexOf(";");
+    var tmp = sboundarys.substr(0,iBdx);
+    var tmps = tmp.split("boundary=");
+    if (tmps.length==2){
+      tmp = tmps[1];
+      var sBoundary = tmp.replace(/\"/g,"");
+      // console.log(sBoundary);  // first Boundary
+      var s = "--"+sBoundary
+      iBdx = sboundarys.indexOf(s);
+      tmp = sboundarys.substr(iBdx+s.length, sboundarys.length-iBdx-s.length);
+
+      var partno = 1;
+      var rawparts = tmp.split(s);
+      // console.log(rawparts);
+      rawparts.forEach(rawpart =>{
+        if (rawpart.includes("Content-Type: image")){
+          var img = {};
+          img.partno = partno;
+          handleImage(rawpart, img);
+          // console.log(img);
+          if (img.id.length>0){
+            imglist[partno] = img;
+          }
+        }
+        partno +=1;
+      });
+      // console.log(imglist)
+    }
+  }
+};
 const handleImage = (rawpart, img) => {
-  //console.log(rawpart);
+  // console.log(rawpart);
   //Content-Type: image/png; name="image001.png"
+
   var idx = rawpart.indexOf("Content-Type:");
   var iEnd = rawpart.indexOf(";", idx+1);
   var typs = rawpart.substr(idx, iEnd-idx).split(": ");
@@ -162,37 +174,45 @@ const handleHTMLImage = (bodys, imglist) => {
   // parser html's <img> tag
   // console.log(bodys);
   var body =bodys[0];
-  console.log(body); 
+  // console.log(body); 
   var imgs = body.getElementsByTagName("img");
-  console.log(imgs);
+  // console.log(imgs);
   //HTMLCollection
   for (var i = 0; i < imgs.length; i++) {
     img = imgs[i];
-    if (img.alt) {
-      if (img.alt.indexOf("cid:")==0){
-        //contruct image string for <img src="XXX">
-        var tmps = img.alt.split(":");
-        if (tmps.length==2){
-          var cid = tmps[1];
-          // var ilast = cid.lastIndexOf(".");
-          // cid = cid.substr(0, ilast);
-          console.log(cid);
-          //console.log(imglist);
-          var elm = imglist[cid];
-          if (elm) {
-            console.log(elm);
-          }
-        }
-      }else{
-        // console.log(img.alt);
-        if (img.alt.indexOf("http")==0){
-          img.src = img.alt;
-        }else{
-          console.log("handle:" + img);
+    // console.log(img);
+    // console.log(img.src);
+    if (img.src) {
+      var src = img.src;
+      if (src.indexOf("mailbox:")==0){
+        var url = src.split("?");
+        if (url.length==2){
+          var arg = url[1];
+          var args = {};
+          var tmps = arg.split("&");
+          tmps.forEach(element => {
+            var els = element.split("=");
+            args[els[0]] = els[1];
+          });
+          // console.log(args);
+          var partno  = args["part"].split(".")[1];
+          // console.log("partno:"+ partno);
+          /* src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAUA
+          AAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO
+              9TXL0Y4OHwAAAABJRU5ErkJggg=="
+          */
+         if (imglist[partno]){
+          url = "data:"+imglist[partno].type+";"+
+            imglist[partno].enc+", "+imglist[partno].body;
+          // console.log(url);
+          img.src = url;
+         } else{
+           console.log("imglist[partno] not define:" + partno+ "\n"+ imglist);
+         }
         }
       }
-    }else{
-      console.log("handle image with no alt:" + img);
+    } else{      
+        console.log("handle image with no src:" + img);
     }
   }
   return bodys;
@@ -207,13 +227,11 @@ const handleAlternative = (element, imglist) => {
     console.log(elm.contentType);
     if (elm.contentType == "text/html") {
       // console.log(elm);
-      // msg= elm.body;
-      //
       //parser html doc's body
       var parser = new DOMParser();
       var doc = parser.parseFromString(elm.body, "text/html");
       var bodys = doc.getElementsByTagName('body');
-      //TODO: handle <img> tags
+      //handle <img> tag's src path
       bodys = handleHTMLImage(bodys, imglist);
       // console.log(bodys);
       //console.log(bodys[0].innerHTML);
